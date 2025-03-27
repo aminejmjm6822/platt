@@ -1,0 +1,65 @@
+Sure, here's the proposed content for the file /learning-platform/learning-platform/frontend/src/components/Quiz:
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const Quiz = ({ quizId }) => {
+    const [quiz, setQuiz] = useState(null);
+    const [userAnswers, setUserAnswers] = useState({});
+    const [submitted, setSubmitted] = useState(false);
+    const [score, setScore] = useState(0);
+
+    useEffect(() => {
+        const fetchQuiz = async () => {
+            const response = await axios.get(`/api/quizzes/${quizId}`);
+            setQuiz(response.data);
+        };
+        fetchQuiz();
+    }, [quizId]);
+
+    const handleAnswerChange = (questionId, answer) => {
+        setUserAnswers({
+            ...userAnswers,
+            [questionId]: answer,
+        });
+    };
+
+    const handleSubmit = async () => {
+        const response = await axios.post(`/api/quizzes/${quizId}/submit`, { answers: userAnswers });
+        setScore(response.data.score);
+        setSubmitted(true);
+    };
+
+    if (submitted) {
+        return <div>Your score: {score}</div>;
+    }
+
+    if (!quiz) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <div>
+            <h2>{quiz.title}</h2>
+            {quiz.questions.map((question) => (
+                <div key={question.id}>
+                    <p>{question.text}</p>
+                    {question.options.map((option) => (
+                        <label key={option}>
+                            <input
+                                type="radio"
+                                name={question.id}
+                                value={option}
+                                onChange={() => handleAnswerChange(question.id, option)}
+                            />
+                            {option}
+                        </label>
+                    ))}
+                </div>
+            ))}
+            <button onClick={handleSubmit}>Submit</button>
+        </div>
+    );
+};
+
+export default Quiz;
